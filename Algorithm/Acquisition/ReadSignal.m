@@ -130,3 +130,76 @@ axis tight;
 ylim([0, 1.1]); % Force Y-axis from 0 to ~1
 fprintf('Plot 4 (improved) complete.\n');
 
+% --- Cálculo de FFT ---
+% Usar la señal sin offset ('signal_detrended')
+signal_fft = fft(signal_detrended);
+
+% CORRECCIÓN: Crear los vectores de frecuencia correctos.
+% Vector de frecuencia para FFT centrada (-Fs/2 a +Fs/2) - en MHz
+f_shifted = (-L/2 : L/2-1) * (Fs / L) * 1e-6;
+
+% --- Cálculo de PSD (pwelch) ---
+% MEJORA: pwelch es más robusto para estimar la PSD.
+% Lo centramos para que coincida con la FFT.
+window = hamming(N);
+noverlap = N / 2; % Solapamiento del 50%
+nfft = max(256, 2^nextpow2(N)); % Tamaño de FFT
+
+% 'centered' nos da directamente el espectro de -Fs/2 a +Fs/2
+[pxx, f_pwelch] = pwelch(signal_detrended, window, noverlap, nfft, Fs, 'centered');
+
+% Convertir frecuencia a MHz
+f_pwelch = f_pwelch * 1e-6;
+
+% --- Gráficas ---
+
+% Gráfica 1: FFT Centrada (La más útil)
+figure(1);
+% MEJORA: Usar fftshift() y el vector f_shifted.
+% MEJORA: Plotear en dB (10*log10) es estándar para espectros.
+plot(f_shifted, 10*log10(abs(fftshift(signal_fft))));
+title(sprintf('FFT Centrada (%.1f ms de señal)', t));
+xlabel('Frecuencia [MHz]');
+ylabel('Amplitud [dB]');
+grid on;
+axis tight; % Ajustar ejes
+
+% Gráfica 2: PSD con pwelch (Más suave y precisa)
+figure(2);
+% CORRECCIÓN: No multiplicar pxx por w. Solo convertir a dB.
+plot(f_pwelch, 10*log10(pxx)); 
+title('Power Spectral Density (pwelch)');
+xlabel('Frecuencia [MHz]');
+ylabel('Potencia/Frecuencia [dB/Hz]');
+grid on;
+axis tight;
+
+% Gráfica 3: Espectrograma (Muy útil para ver la señal en el tiempo)
+% MEJORA: Una FFT de 1ms es un solo "snapshot". Un espectrograma
+% te muestra si la señal está cambiando o saltando.
+figure(3);
+% Usamos ventanas más pequeñas para ver la evolución en el tiempo
+win_spec = hamming(4096);
+overlap_spec = 2048;
+nfft_spec = 4096;
+spectrogram(signal, win_spec, overlap_spec, nfft_spec, Fs, 'centered', 'yaxis');
+title('Espectrograma');
+xlabel('Tiempo');
+% El 'yaxis' ya pone la frecuencia en MHz o GHz automáticamente
+ylabel('Frecuencia');
+
+
+% --- Autocorrelación Cíclica (Opcional) ---
+% Esta sección requiere una función 'cyclicAutoCorr' que no es estándar de MATLAB.
+% Si tienes esta función en tu "path", descomenta las siguientes líneas.
+
+% disp('Calculando autocorrelación cíclica...');
+% alpha_hat = (230.39: 0.0005: 230.41) .* 1e6;
+% [R, alpha] = cyclicAutoCorr(signal, 0, Fs, alpha_hat);
+% 
+% figure(4); % Crear una nueva figura
+% plot(alpha_hat .* 1e-6, abs(R));
+% title('Espectro Cíclico (Autocorrelación)');
+% xlabel('Frecuencia Cíclica (alpha) [MHz]');
+% ylabel('Amplitud');
+% grid on;
