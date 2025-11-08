@@ -13,9 +13,50 @@ In this stage, the system accurately characterises and tracks the Doppler shift 
 ### 3. Navigation
 This final stage implements navigation algorithms derived from established literature. The results obtained here represent the ultimate goal of the project: determining the position of the receiver based on the processed and tracked satellite signal data from LEO.
 
+---
 ## Rules
-*[ESTABLISH CODE RULES DURING NEXT MEETING]*
+### 0. General
+- **0.1** All team members shall follow this style guide for all MATLAB code in the project.
 
+### 1. Code Layout
+
+#### 1.1 Functions
+- **1.1.1** Use **functions** instead of scripts whenever possible to enhance scalability.  
+- **1.1.2** Avoid creating unused or unnecessary functions to keep the codebase simple.
+
+#### 1.2 Indentation
+- **1.2.1** Use **4 spaces** per indentation level.  
+- **1.2.2** All code blocks (e.g., `if`, `for`, `function`) must be indented consistently.
+
+#### 1.3 Line Length
+- **1.3.1** Maximum line length: **75 characters**.  
+- **1.3.2** If a line exceeds this limit, split it into multiple lines using the continuation symbol `...` at logical breakpoints.
+
+#### 1.4 Whitespace
+- **1.4.1** Avoid **extraneous whitespace**. Follow good practices as shown in MATLAB’s official documentation.
+
+### 2. File Header / Template (Mandatory)
+
+- **2.1** Every MATLAB file (`.m`) shall begin with the standard header from  
+  `Algorithm/codingTemplate.m`.  
+  - **2.1.1** Copy the header directly from `codingTemplate.m` and ensure all fields are completed or updated appropriately.
+
+### 3. Comments
+
+- **3.1** Comments should be **complete sentences**. Capitalise the first word unless it is an identifier starting with a lowercase letter.  
+- **3.2** Begin all comments with `%` followed by a **single space**.  
+- **3.3** Separate paragraphs inside a block comment with a line containing a single `#`.  
+- **3.4** Each function must include **descriptive comments** explaining its purpose, inputs, and outputs to improve readability.
+
+### 4. Naming Conventions
+
+- **4.1** Use **lowerCamelCase** for variable and function names (e.g., `numIterations`, `sensorData`).  
+- **4.2** Boolean variables should clearly indicate true/false states (e.g., `isValid`, `hasConverged`).  
+- **4.3** Avoid unclear or misleading names such as:
+  - Single-letter names (e.g., `i`, `j`, `k`)  
+  - Built-in MATLAB function names (e.g., `disp`, `sum`)
+
+---
 ## 🔧 Setup
 ### Clone the repository
 ```bash
