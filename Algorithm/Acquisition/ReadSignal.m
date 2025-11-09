@@ -1,23 +1,24 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%                            ReadSignal.m
+%                            mainSignalValidation.m
 %
 % Copyright: Cranfield University
 % Project Name: LEO-PNT
-% Module: Acquisition
-% Author: [Your Name]
-% Date: 8th November 2025
-% Last Update: 8th November 2025
+% Module: -
+% Author: Pablo, Fredo, Marti & Dan
+% Date: 9th November 2025
+% Last Update: 9th November 2025
 % Version: 1.0.0
 %
-% Description: [A brief description of the file's purpose and contents]
+% Description: Compares and validates the given OneWeb signal to the
+% results in 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clc; clear; close all;  % Reset MATLAB environment
 %%
 % File and Signal Parameters
-filename = fullfile('..', '..', 'Signals', 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin');
+filename = 'C:\Users\padlo\Desktop\Cranfield-LEO-PNT\Signals\rx_stream-320.00-1975.00-2-nvme2.56-10db.bin';
 Fs = 3.2e8; % Sampling frequency: 320 MHz
 t = 10; % Duration to read in milliseconds (ms)
 N = floor(t * Fs / 1000); % Total number of I/Q samples to read
@@ -57,7 +58,12 @@ dataQ = double(data(2, :)) / (2^15 - 1);
 signal = dataI + 1i * dataQ;
 signalDetrended = detrend(signal); % Removes DC drift
 fprintf('Signal processed (detrend).\n');
+figure()
+plot(timeArray, dataQ)
+figure()
+plot(timeArray, dataI)
 
+%%
 % FFT Calculation
 signalFFT = fft(signal);
 f_shifted = (-N/2 : N/2-1) * (Fs / N) * 1e-6;
