@@ -21,7 +21,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-clear all;
 clc; clear; close all;  % Reset MATLAB environment
 
 %% Read Signal
@@ -40,7 +39,7 @@ plotFFT(fShifted, abs(signalFFT))
 fprintf('Calculating PSD...\n');
 
 % Small window segment size.
-windowLength = 8192; % 0.025*N;
+windowLength = floor(0.025*N);
 window = hamming(windowLength);
 nOverlap = windowLength / 2; % 50% overlap between windows
 nfft = windowLength; % Same number of FFT points as the window
@@ -49,7 +48,7 @@ nfft = windowLength; % Same number of FFT points as the window
 [pxx, fpsd] = pwelch(signalDetrended, window, nOverlap, nfft, Fs, 'centered');
 fpsd = fpsd * 1e-6; % Convert frequency to MHz
 w = abs(fpsd(1)-fpsd(2));
-fpsd = pxx.*w; % Remove normalisation with frequency.
+pxx = pxx.*w; % Remove normalisation with frequency.
 fprintf('PSD (pwelch) calculation complete.\n');
 plotPSD(fpsd, pxx);
 
@@ -59,10 +58,10 @@ fprintf('Calculating cyclic autocorrelation...\n');
 % Use only a percentage of the processed signal.
 tChunk = 0.1*t; % 10% of the processed signal 
 lChunk = floor(tChunk * Fs / 1000);
-signalChunk = signal(1:LChunk); 
+signalChunk = signalDetrended(1:lChunk); 
 
 % The frequency range to study (based on paper)
-alphaHat = (230.39: 0.000001: 230.41) .* 1e6;
+alphaHat = (230.39: 0.0001: 230.41) .* 1e6;
 
 % Autocorrelation
 [R, alpha] = cyclicAutoCorr(signalChunk, 0, Fs, alphaHat);
@@ -78,7 +77,7 @@ fprintf('Calculating data for 3D spectrogram...\n');
 winSpec = hamming(4096);
 overlapSpec = 2048;
 nfftSpec = 4096;
-[sSpec, fSpec, tSpec] = spectrogram(signal, winSpec, overlapSpec, nfftSpec, Fs, 'centered');
+[sSpec, fSpec, tSpec] = spectrogram(signalDetrended, winSpec, overlapSpec, nfftSpec, Fs, 'centered');
 tSpec = tSpec * 1000; % tspec to ms
 fSpec = fSpec * 1e-6; % fspec to MHz
 sSpec = 10*log10(abs(sSpec)); % Output of spectogram in db
