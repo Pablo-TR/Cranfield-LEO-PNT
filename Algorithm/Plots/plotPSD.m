@@ -1,4 +1,4 @@
-function plotPSD(pxx, fpsd)
+function plotPSD(fpsd, pxx)
     plot(fpsd, 10*log10(pxx)); 
     title('"Smooth" PSD (pwelch with averaging)');
     xlabel('Frequency [MHz]');

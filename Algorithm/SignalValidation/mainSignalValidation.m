@@ -28,30 +28,30 @@ clc; clear; close all;  % Reset MATLAB environment
 filename = 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin';
 Fs = 3.20e8; % Sampling frequency of the signal [MHz].
 t   = 10; % Interval of time of signal to read [ms]. Reads from t = 0ms to t 
-[SignalData, N, timeArray] = readSignal(filename, Fs, t); % Returns DETRENDED signal
+[signalDetrended, N, timeArray] = readSignal(filename, Fs, t); % Returns DETRENDED signal
 
 %% FFT Calculation
-signalFFT = fft(signal);
+signalFFT = fft(signalDetrended);
 fShifted = (-N/2 : N/2-1) * (Fs / N) * 1e-6; % in MHz
 fprintf('FFT calculation complete.\n');
-plotFFT(signalFFT, fFshifted)
+plotFFT(fShifted, abs(signalFFT))
 
 %% PSD calculation
 fprintf('Calculating PSD...\n');
 
 % Small window segment size.
-windowLength = 0.025*N;
+windowLength = 8192; % 0.025*N;
 window = hamming(windowLength);
 nOverlap = windowLength / 2; % 50% overlap between windows
 nfft = windowLength; % Same number of FFT points as the window
 
 % This function will now average (N / win_len) * 2 segments.
-[pxx, fpds] = pwelch(signalDetrended, window, noverlap, nfft, Fs, 'centered');
+[pxx, fpsd] = pwelch(signalDetrended, window, nOverlap, nfft, Fs, 'centered');
 fpsd = fpsd * 1e-6; % Convert frequency to MHz
 w = abs(fpsd(1)-fpsd(2));
 fpsd = pxx.*w; % Remove normalisation with frequency.
 fprintf('PSD (pwelch) calculation complete.\n');
-plotPSD(pxx, fpsd);
+plotPSD(fpsd, pxx);
 
 %% Cyclic Autocorrelation
 fprintf('Calculating cyclic autocorrelation...\n');
