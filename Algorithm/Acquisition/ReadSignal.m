@@ -1,52 +1,69 @@
-% --- Initial Setup ---
-clear all;
-close all; % Close all previous figures
-clc;       % Clear the command window
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%                            ReadSignal.m
+%
+% Copyright: Cranfield University
+% Project Name: LEO-PNT
+% Module: Acquisition
+% Author: [Your Name]
+% Date: 8th November 2025
+% Last Update: 8th November 2025
+% Version: 1.0.0
+%
+% Description: [A brief description of the file's purpose and contents]
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% --- File and Signal Parameters ---
-filename = 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin';
+clc; clear; close all;  % Reset MATLAB environment
+%%
+% File and Signal Parameters
+filename = fullfile('..', '..', 'Signals', 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin');
 Fs = 3.2e8; % Sampling frequency: 320 MHz
-t = 10;    % Duration to read in milliseconds (ms)
+t = 10; % Duration to read in milliseconds (ms)
+N = floor(t * Fs / 1000); % Total number of I/Q samples to read
+timeArray = 0:t/1000:(N*t/1000 - t/1000); % Time array
 
-% Calculate the total number of I/Q samples to read
-L = floor(t * Fs / 1000);
-N = L; % N is the number of I/Q samples
+% File Read Parameters
+dataType = 'int16';
+bytesPerSample = 2;
 
-% --- File Read Parameters ---
-data_type = 'int16';
-bytes_per_sample = 2;
-
-% --- Binary File Read ---
+% Binary File Read
 fprintf('Opening file: %s\n', filename);
 [fid, msg] = fopen(filename, 'r');
 if fid < 0
     error('Could not open file "%s" - Error: %s', filename, msg);
 end
-
 fprintf('Reading %d samples (%d ms)...\n', N, t);
-data = fread(fid, [2, N], data_type);
+
+% Reading binary data and turning into int16 (-32768 to 32767)
+data = fread(fid, [2, N], dataType);
 fclose(fid);
 fprintf('File read complete.\n');
 
+% Conversion int16 to hexadecimal
+%dataVec = data(:);
+%hexData= dec2hex(typecast(int16(dataVec), 'uint16'), 4);
+
+% Checking if fewer samples than expected were read and adjusting 
 if size(data, 2) < N
     warning('Fewer samples read than expected. End of file?');
     N = size(data, 2);
-    L = N;
     if N == 0, error('No data read.'); end
 end
 
-% --- Signal Processing (Time Domain) ---
-data_I = double(data(1, :)) / (2^15 - 1);
-data_Q = double(data(2, :)) / (2^15 - 1);
-signal = data_I + 1i * data_Q;
-signal_detrended = detrend(signal);
+% Signal Processing (Time Domain)
+dataI = double(data(1, :)) / (2^15 - 1); % Normalising to 2^15 = 32768 (max int16)
+dataQ = double(data(2, :)) / (2^15 - 1);
+signal = dataI + 1i * dataQ;
+signalDetrended = detrend(signal); % Removes DC drift
 fprintf('Signal processed (detrend).\n');
 
-% --- FFT Calculation ---
-signal_fft = fft(signal_detrended);
-f_shifted = (-L/2 : L/2-1) * (Fs / L) * 1e-6;
+% FFT Calculation
+signalFFT = fft(signal);
+f_shifted = (-N/2 : N/2-1) * (Fs / N) * 1e-6;
 fprintf('FFT calculation complete.\n');
 
+%%
 % --- !!! CORRECTION FOR FIGURE 2 !!! ---
 % --- PSD Calculation (pwelch) with AVERAGING ---
 fprintf('Calculating PSD (pwelch) with averaging...\n');
@@ -58,21 +75,21 @@ noverlap = win_len / 2; % 50% overlap
 nfft = win_len; % Use the same number of FFT points as the window
 % 'centered' gives us the spectrum from -Fs/2 to +Fs/2
 % This function will now average (N / win_len) * 2 segments.
-[pxx, f_pwelch] = pwelch(signal_detrended, window, noverlap, nfft, Fs, 'centered');
+[pxx, f_pwelch] = pwelch(signalDetrended, window, noverlap, nfft, Fs, 'centered');
 f_pwelch = f_pwelch * 1e-6; % Convert frequency to MHz
 w = abs(f_pwelch(1)-f_pwelch(2));
 fprintf('PSD (pwelch) calculation complete.\n');
-
+%%
 % --- Main Plots ---
 % Plot 1: Centered FFT (Will look "noisy", this is normal)
 figure(1);
-plot(f_shifted, 10*log10(abs(fftshift(signal_fft))));
+plot(f_shifted, 10*log10(abs(fftshift(signalFFT))));
 title(sprintf('"Noisy" FFT (Raw) (%.1f ms of signal)', t));
 xlabel('Frequency [MHz]');
 ylabel('Amplitude [dB]');
 grid on;
 axis tight;
-
+%%
 % Plot 2: PSD with pwelch (Will look "smooth", thanks to averaging)
 figure(2);
 plot(f_pwelch, 10*log10(pxx.*w)); 
@@ -81,7 +98,7 @@ xlabel('Frequency [MHz]');
 ylabel('Power/Frequency [dB/Hz]');
 grid on;
 axis tight;
-
+%%
 % Plot 3: 3D Spectrogram
 figure(3);
 fprintf('Calculating data for 3D spectrogram...\n');
@@ -102,7 +119,7 @@ xlabel('Time [ms]');
 ylabel('Frequency [MHz]');
 zlabel('Power [dB]');
 fprintf('Displaying plots.\n');
-
+%%
 % --- Plot 4: Cyclic Autocorrelation (The "fingerprint") ---
 % --- THIS IS THE IMPROVED VERSION ---
 fprintf('Calculating cyclic autocorrelation (on a short chunk)...\n');
@@ -120,6 +137,7 @@ alpha_hat = (230.39: 0.000001: 230.41) .* 1e6;
 % Convert to magnitude and normalize (divide by the maximum)
 R_normalized = abs(R) / max(abs(R));
 % --- Plotting ---
+%%
 figure(4);
 plot(alpha_hat .* 1e-6, R_normalized, 'LineWidth', 1.5); % X-axis in MHz
 title('NORMALIZED Cyclic Spectrum (over 10ms)');
@@ -129,14 +147,14 @@ grid on;
 axis tight;
 ylim([0, 1.1]); % Force Y-axis from 0 to ~1
 fprintf('Plot 4 (improved) complete.\n');
-
+%%
 % --- Cálculo de FFT ---
 % Usar la señal sin offset ('signal_detrended')
-signal_fft = fft(signal_detrended);
+signalFFT = fft(signalDetrended);
 
 % CORRECCIÓN: Crear los vectores de frecuencia correctos.
 % Vector de frecuencia para FFT centrada (-Fs/2 a +Fs/2) - en MHz
-f_shifted = (-L/2 : L/2-1) * (Fs / L) * 1e-6;
+f_shifted = (-N/2 : N/2-1) * (Fs / N) * 1e-6;
 
 % --- Cálculo de PSD (pwelch) ---
 % MEJORA: pwelch es más robusto para estimar la PSD.
@@ -146,7 +164,7 @@ noverlap = N / 2; % Solapamiento del 50%
 nfft = max(256, 2^nextpow2(N)); % Tamaño de FFT
 
 % 'centered' nos da directamente el espectro de -Fs/2 a +Fs/2
-[pxx, f_pwelch] = pwelch(signal_detrended, window, noverlap, nfft, Fs, 'centered');
+[pxx, f_pwelch] = pwelch(signalDetrended, window, noverlap, nfft, Fs, 'centered');
 
 % Convertir frecuencia a MHz
 f_pwelch = f_pwelch * 1e-6;
@@ -157,13 +175,13 @@ f_pwelch = f_pwelch * 1e-6;
 figure(1);
 % MEJORA: Usar fftshift() y el vector f_shifted.
 % MEJORA: Plotear en dB (10*log10) es estándar para espectros.
-plot(f_shifted, 10*log10(abs(fftshift(signal_fft))));
+plot(f_shifted, 10*log10(abs(fftshift(signalFFT))));
 title(sprintf('FFT Centrada (%.1f ms de señal)', t));
 xlabel('Frecuencia [MHz]');
 ylabel('Amplitud [dB]');
 grid on;
 axis tight; % Ajustar ejes
-
+%%
 % Gráfica 2: PSD con pwelch (Más suave y precisa)
 figure(2);
 % CORRECCIÓN: No multiplicar pxx por w. Solo convertir a dB.
@@ -173,7 +191,7 @@ xlabel('Frecuencia [MHz]');
 ylabel('Potencia/Frecuencia [dB/Hz]');
 grid on;
 axis tight;
-
+%%
 % Gráfica 3: Espectrograma (Muy útil para ver la señal en el tiempo)
 % MEJORA: Una FFT de 1ms es un solo "snapshot". Un espectrograma
 % te muestra si la señal está cambiando o saltando.
