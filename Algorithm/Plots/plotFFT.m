@@ -15,7 +15,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function plotFFT(fShifted, signalFFT)
-    figure(1);
+    figure();
     plot(fShifted, 10*log10(abs(fftshift(signalFFT))));
     title('"Noisy" FFT');
     xlabel('Frequency [MHz]');
