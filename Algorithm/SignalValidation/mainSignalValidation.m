@@ -46,8 +46,8 @@ nfft = windowLength; % Same number of FFT points as the window
 
 % This function will now average (N / win_len) * 2 segments.
 [pxx, fpsd] = pwelch(signalDetrended, window, nOverlap, nfft, Fs, 'centered');
-fpsd = fpsd * 1e-6; % Convert frequency to MHz
 w = abs(fpsd(1)-fpsd(2));
+fpsd = fpsd * 1e-6; % Convert frequency to MHz
 pxx = pxx.*w; % Remove normalisation with frequency.
 fprintf('PSD (pwelch) calculation complete.\n');
 plotPSD(fpsd, pxx);
