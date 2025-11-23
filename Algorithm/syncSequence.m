@@ -22,8 +22,17 @@
 clc; clear; close all;
 
 %% System parameters
+filename = 'OW-sample500-250-5s-ram-29.bin';
+t   = 10; % Interval of time of signal to read [ms]. Reads from t = 0ms to t 
+
 M = 4;              % QPSK modulation
 k = log2(M);        % Bits per symbol
+Fsym = 2.304e8;     % Symbol rate (Hz)
+Fs = 3.2e8;         % Sampling frequency (Hz)
+L_up = 25;          % Samples per symbol
+M_dn = 18;
+span = 20;          % Filter span (symbols), number of symbols covered
+rollOff = 0.1;      % Obtained from paper
 
 %% 1. Hexadecimal sequence of symbols (SS) conversion to Binary
 qSSHex = ['B5D0 CDB5 66F9 5A93 F90B 0060 834E 073C 9EC3 EAAA D425 C677' ...
@@ -45,6 +54,25 @@ dataSym = bi2de(reshape(qSSBin, k, []).', 'left-msb').';   % a_m symbol phase va
 txSym = pskmod(dataSym, M, 0);  % π/4 QPSK, converts integer symbol values into complex points in the in-phase quadrature diagram
 
 %% 3. SRRC Pulse Shaping Filter
+
+txFilter = rcosdesign(rollOff, span, L_up, 'sqrt'); % Tx SRRC filter, span*L_up+1 samples of the filter
+dataSymReSampled = upsample(dataSym, L_up);
+txSig = upfirdn(txSym, txFilter, L_up);  % Pulse shaping
+
+figure
+plot(txFilter)
+hold on;
+
+figure
+plot(real(txSig(1:2000)), 'b+-', 'LineWidth', 1.2); hold on;
+plot(imag(txSig(1:2000)), 'r+-', 'LineWidth', 1.2);
+title('Transmitted Baseband (SRRC Pulse Shaped)');
+xlabel('Sample Index'); ylabel('Amplitude'); grid on;
+legend('I','Q');
+
+
+
+
 
 
 
