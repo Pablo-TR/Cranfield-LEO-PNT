@@ -22,8 +22,8 @@
 function [signalDetrended, N, timeArray] = readSignal(filename, Fs, t)
 
     N = floor(t * Fs / 1000); % Total number of I/Q samples to read
-    timeArray = 0:t/1000:(N*t/1000 - t/1000); % Time array
-
+    %timeArray = 0:t/1000:(N*t/1000 - t/1000);
+    timeArray = 0:t/N:t-t/N;  % Time array in ms
     % File Read Parameters
     dataType = 'int16';
 
