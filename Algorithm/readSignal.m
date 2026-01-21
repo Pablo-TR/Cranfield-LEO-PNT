@@ -19,11 +19,12 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [signalDetrended, N, timeArray] = readSignal(filename, Fs, t)
+function [signalDetrended, N, timeArray, binData] = readSignal(filename, Fs, t)
 
     N = floor(t * Fs / 1000); % Total number of I/Q samples to read
     %timeArray = 0:t/1000:(N*t/1000 - t/1000);
-    timeArray = 0:t/N:t-t/N;  % Time array in ms
+    timeArray = 0:1/Fs:t/1000 - 1/Fs; % Time array
+
     % File Read Parameters
     dataType = 'int16';
 
@@ -41,8 +42,8 @@ function [signalDetrended, N, timeArray] = readSignal(filename, Fs, t)
     fprintf('File read complete.\n');
     
     % Conversion int16 to hexadecimal
-    %dataVec = data(:);
-    %hexData= dec2hex(typecast(int16(dataVec), 'uint16'), 4);
+    dataVec = data(:);
+    binData= dec2bin(typecast(int16(dataVec), 'uint16'), 4);
     
     % Checking if fewer samples than expected were read and adjusting 
     if size(data, 2) < N
