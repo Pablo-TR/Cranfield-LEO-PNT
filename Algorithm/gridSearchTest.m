@@ -1,0 +1,50 @@
+Fs = 3.2e8;
+Fsym = 2.304e8;
+t = 20; %ms
+[x_l, ~]  = localReplica(Fs, Fsym);
+filename = 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin';
+x_r = readSignal(filename,Fs, t);
+[tau, fd] = performGridSearch(x_l, x_r, Fs);
+
+
+%%
+function [tau_found, fd_found] = performGridSearch(x_l, x_r, Fs)
+Ts = 1/Fs;
+fd_max = 614*10^3;
+tau_max = 4e-3;
+fd = -fd_max:3070:fd_max;
+tau = -tau_max:1e-4:tau_max;
+% Repeat local replica to be the same length as the received signal
+K = length(x_r);
+x_l = repmat(x_l, ceil(K/length(x_l)), 1);
+x_l = x_l(1:K);k = 0:K-1;
+for i = 1:1:length(fd)
+    fprintf('Searching for fd %d/%d\n', i, length(fd));
+    for j = 1:1:length(tau)
+    fprintf('Searching for tau %d/%d\n', j, length(tau));
+% Convert tau delay into samples
+        N = round(tau(j)*Fs);
+% Circshift (account for time delay) of local replica
+    x_local_shifted = circshift(x_l,N);
+%FFT of shifted local replica
+    x_local_fft_shifted = fft(x_local_shifted, K);
+% Perform wipe-off to received signal
+    x_wiped = x_r .* exp(-1j*2*pi*fd(i).*k.*Ts);
+% Compute FFT of wiped received signal
+    x_wiped_fft = fft(x_wiped, K);
+% Cross-correlate with time-shifted local replica
+    Y = x_wiped_fft .* conj(x_local_fft_shifted);
+% Compute ambiguity function
+    R = (1/K^2) * ifft(Y, K);
+% Obtain maximum and indices
+    S(i,j)  = max(R.^2);
+    end
+end
+    [z_max, idx] = max(S(:));
+    [m, n] = ind2sub(size(S), idx);
+    fd_found = fd(m);
+    tau_found = tau(n);
+% Plot ambiguity function
+figure
+surf(fd, tau,S)
+end
