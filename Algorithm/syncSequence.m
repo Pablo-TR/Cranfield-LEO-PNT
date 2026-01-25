@@ -23,13 +23,15 @@ clc; clear; close all;
 
 %% System parameters
 filename = 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin';
-t   = 20; % Interval of time of signal to read [ms]. Reads from t = 0ms to t 
+tStart   = 0; % Start time of signal to read [ms].
+tEnd = 20; % End time of signal to read [ms].
 
 M = 4;              % QPSK modulation
 k = log2(M);        % Bits per symbol
 Fsym = 2.304e8;     % Symbol rate (Hz)
 Fs = 3.2e8;         % Sampling frequency (Hz)
-span = 20;          % Filter span (symbols), number of symbols covered
+span = 15;          % Filter span (symbols), number of symbols covered
+sps = 18;           % Samples per symbol
 rollOff = 0.1;      % Obtained from paper
 
 %% 1. Hexadecimal sequence of symbols (SS) conversion to Binary
@@ -57,32 +59,65 @@ Nsym = length(txSym); % Number of symbols
 t_in  = (0:Nsym-1)/Fsym; % Time array containing the time at which each symbol has been sent, duration of SS = 1.73e-06s
 t_out = 0:1/Fs:t_in(end); % Time axis of samples at 320 MHz
 
-% Interpolate, so that symbols frequency matches the income signal
+% Upsampling, so that symbols frequency matches the income signal
 % frequency, from Fsym to Fs
-txSym_resampled = interp1(t_in, txSym, t_out, 'spline');   % or 'spline', 'pchip'
+txSymResampled = resample(txSym, Fs, Fsym);
 
-[signalDetrended, ~, timeArray, binData] = readSignal(filename, Fs, t);
+[signalDetrended, ~, timeArray, binData] = readSignal(filename, Fs, tStart, tEnd);
 
 % Correlation between incoming signal and synchronisation sequence
-[rcorr, lags] = xcorr(signalDetrended, txSym_resampled);
+[rcorr, lags] = xcorr(signalDetrended, txSymResampled);
 
-time = 1000*lags/Fs;
+time = tStart + (1000*lags/Fs);
 
-%% 3. SRRC Pulse Shaping Filter
+%% 3. SRRC Pulse Shaping Filter, maximise correlation by varying span and sps?
 
-%txFilter = rcosdesign(rollOff, span, 25, 'sqrt'); % Tx SRRC filter, span*L_up+1 samples of the filter
-%txSig = upfirdn(txSym, txFilter, 25, 18);  % Pulse shaping
+txFilter = rcosdesign(rollOff, span, sps, 'sqrt'); % Tx SRRC filter, span*L_up+1 samples of the filter
+txSig = upfirdn(txSym, txFilter, 25, 18);  % Pulse shaping
+
+[rcorr2, lags2] = xcorr(signalDetrended, txSig);
+r2 = abs(rcorr2) / (norm(signalDetrended)*norm(txSig));
+time2 = tStart + (1000*lags2/Fs);
+
+%% Shape of SRRC Pulse
+figure
+plot(1:length(txFilter), txFilter)
+set(gca, 'FontSize', 16);
+set(gca, 'LineWidth', 1.2);
+grid on;
+
+%%
+figure
+plot(real(txSig), 'b+-', 'LineWidth', 1.2); hold on;
+plot(imag(txSig), 'r+-', 'LineWidth', 1.2);
+title('Transmitted Baseband (SRRC Pulse Shaped)');
+xlabel('Sample Index'); ylabel('Amplitude'); grid on;
+legend('I','Q');
 
 %%
 figure
 plot(time, abs(rcorr))
 xlabel('Time (ms)','interpreter','latex','fontsize',14)
 ylabel('$|$R($\tau$)$|$','interpreter','latex','fontsize',14);
-xlim([0 time(end)])
+xlim([tStart time(end)])
 set(gca, 'FontSize', 16);
 set(gca, 'LineWidth', 1.2);
 grid on;
 
+%%
+figure
+plot(real(txSymResampled), imag(txSymResampled), '.', 'MarkerSize', 8);
+axis equal; grid on;
+title('Constellation Before Matched Filter');
+xlabel('In-phase'); ylabel('Quadrature');
+
+%%
+fSig = conv(signalDetrended, txFilter, 'same');
+figure
+plot(real(fSig), imag(fSig), '.', 'MarkerSize', 8);
+axis equal; grid on;
+title('Constellation Before Matched Filter');
+xlabel('In-phase'); ylabel('Quadrature');
 
 %% Circular correlation (In progress)
 N = length(signalDetrended);

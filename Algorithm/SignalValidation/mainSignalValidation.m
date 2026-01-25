@@ -26,8 +26,9 @@ clc; clear; close all;  % Reset MATLAB environment
 %% Read Signal
 filename = 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin';
 Fs = 3.20e8; % Sampling frequency of the signal [MHz].
-t   = 10; % Interval of time of signal to read [ms]. Reads from t = 0ms to t 
-[signalDetrended, N, timeArray] = readSignal(filename, Fs, t); % Returns DETRENDED signal
+tStart = 400; % Start time of signal to read [ms].
+tEnd = 420; % Stop time [ms]
+[signalDetrended, N, timeArray] = readSignal(filename, Fs, tStart, tEnd); % Returns DETRENDED signal
 
 %% FFT Calculation
 signalFFT = fft(signalDetrended);

@@ -14,19 +14,32 @@
 % after the SDR, it outputs the detrended signal (I and Q values without DC
 % drift, hence zero mean) along with the number of I/Q samples (N) and the
 % time array. It takes as arguments the filename of the .bin signal along
-% with the sampling frequency Fs [Hz] and t which is the interval of time
-% of signal to read [ms].
+% with the sampling frequency Fs [Hz] and tStart and tEnd which define the 
+% interval of the time of signal to read [ms].
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [signalDetrended, N, timeArray, binData] = readSignal(filename, Fs, t)
+function [signalDetrended, N, timeArray, binData] = readSignal(filename, Fs, tStart, tEnd)
+    
+    % Validate inputs
+    if tEnd <= tStart
+        error('tEnd_ms must be greater than tStart_ms.');
+    end
+    if Fs <= 0
+        error('Fs must be > 0.');
+    end
 
-    N = floor(t * Fs / 1000); % Total number of I/Q samples to read
-    %timeArray = 0:t/1000:(N*t/1000 - t/1000);
-    timeArray = 0:1/Fs:t/1000 - 1/Fs; % Time array
+    Nskip = floor(tStart * Fs / 1000); % Nskip: number of I/Q sample pairs to skip from the beginning
+    tDur = tEnd - tStart;
+
+    N = floor(tDur * Fs / 1000); % Total number of I/Q samples to read
+    timeArray = tStart/1000:1/Fs:tEnd/1000 - 1/Fs; % Time array
 
     % File Read Parameters
     dataType = 'int16';
+    bytesPerValue = 2;
+    valuesPerSamplePair = 2; % I and Q
+    bytesPerSamplePair = bytesPerValue * valuesPerSamplePair;
 
     % Binary File Read
     fprintf('Opening file: %s\n', filename);
@@ -34,7 +47,14 @@ function [signalDetrended, N, timeArray, binData] = readSignal(filename, Fs, t)
     if fid < 0
         error('Could not open file "%s" - Error: %s', filename, msg);
     end
-    fprintf('Reading %d samples (%d ms)...\n', N, t);
+    fprintf('Reading %d samples (%d ms)...\n', N, tDur);
+    
+    byteOffset = Nskip * bytesPerSamplePair;
+    status = fseek(fid, byteOffset, 'bof');
+    if status ~= 0
+        fclose(fid);
+        error('Failed to seek to byte offset %d. Check file size / tStart_ms.', byteOffset);
+    end
 
     % Reading binary data and turning into int16 (-32768 to 32767)
     data = fread(fid, [2, N], dataType);
