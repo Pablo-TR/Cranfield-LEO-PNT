@@ -23,7 +23,7 @@ function [signalDetrended, N, timeArray, binData] = readSignal(filename, Fs, tSt
     
     % Validate inputs
     if tEnd <= tStart
-        error('tEnd_ms must be greater than tStart_ms.');
+        error('tEnd must be greater than tStart.');
     end
     if Fs <= 0
         error('Fs must be > 0.');
@@ -47,13 +47,13 @@ function [signalDetrended, N, timeArray, binData] = readSignal(filename, Fs, tSt
     if fid < 0
         error('Could not open file "%s" - Error: %s', filename, msg);
     end
-    fprintf('Reading %d samples (%d ms)...\n', N, tDur);
+    fprintf('Reading %d samples (%d - %d ms)...\n', N, tStart, tEnd);
     
     byteOffset = Nskip * bytesPerSamplePair;
     status = fseek(fid, byteOffset, 'bof');
     if status ~= 0
         fclose(fid);
-        error('Failed to seek to byte offset %d. Check file size / tStart_ms.', byteOffset);
+        error('Failed to seek to byte offset %d. Check file size / tStart.', byteOffset);
     end
 
     % Reading binary data and turning into int16 (-32768 to 32767)
