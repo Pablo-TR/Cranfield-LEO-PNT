@@ -63,6 +63,7 @@ for i = 0:1:N-1
     idx = find(M == max(M));
     fd_detected(i+1) = fd_search(idx);
 end
+
 %%
 t_mid = Tcoh/2:Tcoh:t(end);
 scatter(t_mid, fd_detected)
