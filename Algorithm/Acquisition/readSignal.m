@@ -19,8 +19,13 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [signalDetrended, N, timeArray, binData] = readSignal(filename, Fs, tStart, tEnd)
+function [signalDetrended, N, timeArray, binData] = readSignal(signalID, tStart, tEnd)
     
+    % Extracting information from the ID signal for later reading
+    signalData = getSignalByID(signalID);
+    filename = signalData.Filename;
+    Fs = signalData.SamplingFreq;
+
     % Validate inputs
     if tEnd <= tStart
         error('tEnd must be greater than tStart.');
