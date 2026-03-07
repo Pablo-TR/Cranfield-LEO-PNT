@@ -1,6 +1,6 @@
-function [doppler, correlation] = dopplerCorrelation(filename, Fs, tStart, tEnd)
+function [doppler, correlation] = dopplerCorrelation(filename, Fs, Tcoh, tStart, tEnd)
 
-N    = round(Fs*10*1e-3); % Number of samples
+N    = round(Fs*Tcoh*1e-3); % Number of samples
 t    = (0:N-1).' / Fs; % Time vector (Nx1)
 
 fc = 2.304e8;        % Carrier frequency [Hz] (passed to replica)

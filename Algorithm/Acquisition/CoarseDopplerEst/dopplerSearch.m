@@ -1,4 +1,4 @@
-
+%
 function [doppler, timeArr] = dopplerSearch(filename, Fs, timeSignal, Tcoh, t)
 
 fc = 2.304e8;        % Carrier frequency [Hz] (passed to replica)
