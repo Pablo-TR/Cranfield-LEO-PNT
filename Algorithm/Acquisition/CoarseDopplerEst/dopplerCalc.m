@@ -1,32 +1,23 @@
 clear all; clc; close all
 
 %% Params
-FsRec   = 3.2e8;          % Sampling frequency [Hz]
-FsOsc = 5e8; 
+
+signalID = 0;
 Tcoh = 1;           % Coherent integration time [ms]
-NRec    = round(FsRec*Tcoh*1e-3); % Number of samples
-tRec    = (0:NRec-1).' / FsRec; % Time vector (Nx1)
 
-NOsc    = round(FsOsc*Tcoh*1e-3); % Number of samples
-tOsc    = (0:NOsc-1).' / FsOsc; % Time vector (Nx1)
-
-
-
-% Read received signal
-filenameRec = 'rx_stream-320.00-1975.00-2-nvme2.56-10db.bin';
-filenameOsc = 'OW-sample500-250-5s-ram-29.bin';
-
-timeSignal = 1; % Time of the signal read [ms]
-numTimeBlocks = timeSignal/Tcoh;
-%%
-[doppler, time] = dopplerSearch(filenameOsc, FsOsc, timeSignal, Tcoh, tOsc);
-
+tStart = 0;
+tEnd = 10;
+tInterval = [tStart tEnd]; % Time interval of the signal to read [ms]
 
 %%
-[doppler, correlation] = dopplerCorrelation(filenameOsc, FsOsc, Tcoh, 0, 1);
+[doppler, time] = dopplerSearch(signalID, tInterval, Tcoh);
 
 %%
-result = dopplerFrequencySearch(filenameOsc, FsOsc, timeSignal, tOsc);
+[fDoppler, correlation] = dopplerCorrelation(signalID, tInterval, Tcoh);
+
+%%
+result = dopplerFrequencySearch(signalID, Tcoh);
+
 %%
 figure
 plot(tOsc,result)
@@ -67,7 +58,7 @@ figure
 hold on
 plot(time, doppler/1e3, 'LineWidth', 1.5)
 grid on
-%ylim([0 80])
+ylim([0 20])
 xlabel('Time [ms]')
 ylabel('Doppler frequency [kHz] (that gave most likelihood)')
 
