@@ -9,31 +9,18 @@ tStart = 0;
 tEnd = 10;
 tInterval = [tStart tEnd]; % Time interval of the signal to read [ms]
 
-%%
-[doppler, time] = dopplerSearch(signalID, tInterval, tCoh);
+
 
 %%
-[fDoppler, correlation] = dopplerCorrelation(signalID, tStart, tCoh);
+[result, time, fd] = dopplerFrequencySearch(signalID, tCoh);
 
 %%
-[result, time] = dopplerFrequencySearch(signalID, tCoh);
-
-%%
-fd = -50000:100:50000;
 [maxVal, linearIndex] = max(result(:));
 [row, col] = ind2sub(size(result), linearIndex);
 
 disp(maxVal)
 disp(fd(row))   % frequency index
 disp(time(col))   % time index
-
-
-%%
-figure
-plot(fDoppler, correlation)
-grid on;
-xlabel('Dopler frequency')
-ylabel('Correlation')
 
 %%
 
@@ -43,6 +30,19 @@ surf(T, F, result, 'EdgeColor','none');
 xlabel('Time'); ylabel('Frequency'); zlabel('Correlation');
 view(3); colorbar; shading interp;
 
+
+%%
+[doppler, time] = dopplerSearch(signalID, tInterval, tCoh);
+
+%%
+[fDoppler, correlation] = dopplerCorrelation(signalID, tStart, tCoh);
+
+%%
+figure
+plot(fDoppler, correlation)
+grid on;
+xlabel('Dopler frequency')
+ylabel('Correlation')
 %%
 figure
 plot(doppler/1e3, correlation)
