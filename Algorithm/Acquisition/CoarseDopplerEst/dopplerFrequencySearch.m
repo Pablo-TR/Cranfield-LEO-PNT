@@ -1,15 +1,17 @@
-function result = dopplerFrequencySearch(signalID, Tcoh)
+function [result, tArray] = dopplerFrequencySearch(signalID, tCoh)
+
+Fsym = 2.304e8; % Symbol frequency [Hz]
 
 signalData = getSignalByID(signalID);
 Fs = signalData.SamplingFreq;
 
-nSamples = round(Fs*Tcoh*1e-3); % Number of samples
+nSamples = round(Fs*tCoh*1e-3); % Number of samples
 tArray    = (0:nSamples-1).' / Fs; % Time vector (Nx1)
 
-Fsym = 2.304e8;
+
 [r_local, ~] = localReplica(Fs, Fsym);
 
-fd = -50000:100:50000;
+fd = -50000:100:50000; % Doppler frequency
 
 tStart = 0;
 tEnd     = tStart + 1; % End time [ms]

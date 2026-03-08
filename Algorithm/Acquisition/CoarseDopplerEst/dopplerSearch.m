@@ -1,16 +1,16 @@
 %
-function [doppler, timeArr] = dopplerSearch(signalID, tInterval, Tcoh)
+function [doppler, timeArr] = dopplerSearch(signalID, tInterval, tCoh)
 
 signalData = getSignalByID(signalID);
 Fs = signalData.SamplingFreq;
 
-nSamples = round(Fs*Tcoh*1e-3); % Number of samples
+nSamples = round(Fs*tCoh*1e-3); % Number of samples
 tArray    = (0:nSamples-1).' / Fs; % Time vector (Nx1)
 
 Fsym = 2.304e8;        % Carrier frequency [Hz] (passed to replica)
 [r_local, ~] = localReplica(Fs, Fsym);
 
-numTimeBlocks = (tInterval(2)-tInterval(1))/Tcoh;
+numTimeBlocks = (tInterval(2)-tInterval(1))/tCoh;
 
 doppler = zeros(numTimeBlocks,1);
 timeArr = zeros(numTimeBlocks,1);
@@ -20,8 +20,8 @@ for n = 1:numTimeBlocks
     disp(n);
     disp(numTimeBlocks);    
 
-    tStart = (n-1)*Tcoh;
-    tEnd     = tStart + Tcoh; % End time [ms]
+    tStart = (n-1)*tCoh;
+    tEnd     = tStart + tCoh; % End time [ms]
     [r, ~, ~, ~] = readSignal(signalID, tStart, tEnd);
     
     r = r(:);

@@ -3,25 +3,21 @@ clear all; clc; close all
 %% Params
 
 signalID = 0;
-Tcoh = 1;           % Coherent integration time [ms]
+tCoh = 1;           % Coherent integration time [ms]
 
 tStart = 0;
 tEnd = 10;
 tInterval = [tStart tEnd]; % Time interval of the signal to read [ms]
 
 %%
-[doppler, time] = dopplerSearch(signalID, tInterval, Tcoh);
+[doppler, time] = dopplerSearch(signalID, tInterval, tCoh);
 
 %%
-[fDoppler, correlation] = dopplerCorrelation(signalID, tInterval, Tcoh);
+[fDoppler, correlation] = dopplerCorrelation(signalID, tStart, tCoh);
 
 %%
-result = dopplerFrequencySearch(signalID, Tcoh);
+[result, time] = dopplerFrequencySearch(signalID, tCoh);
 
-%%
-figure
-plot(tOsc,result)
-grid on;
 %%
 fd = -50000:100:50000;
 [maxVal, linearIndex] = max(result(:));
@@ -29,23 +25,24 @@ fd = -50000:100:50000;
 
 disp(maxVal)
 disp(fd(row))   % frequency index
-disp(tOsc(col))   % time index
+disp(time(col))   % time index
 
 
 %%
 figure
-plot(tOsc, result(500,:))
+plot(fDoppler, correlation)
 grid on;
-xlabel('Time')
+xlabel('Dopler frequency')
 ylabel('Correlation')
 
 %%
 
-[T,F] = meshgrid(tOsc,fd);
+[T,F] = meshgrid(time,fd);
 
 surf(T, F, result, 'EdgeColor','none');
 xlabel('Time'); ylabel('Frequency'); zlabel('Correlation');
 view(3); colorbar; shading interp;
+
 %%
 figure
 plot(doppler/1e3, correlation)
