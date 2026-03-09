@@ -15,7 +15,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [syntheticSignal, tReplicaStarts] = signalCreator(Fs, timeSignal, fDoppler)
+function [syntheticSignal, tReplicaStarts] = signalCreator(Fs, timeSignal, fDoppler, SNR)
 
     Fsym = 2.304e8;
     tRep = 1e-3; % Repeats every 1ms
@@ -40,16 +40,14 @@ function [syntheticSignal, tReplicaStarts] = signalCreator(Fs, timeSignal, fDopp
     % Repeat signal for however much time specified (timeSignal)
     syntheticSignal = repmat(sig1ms, timeSignal, 1);
 
-    % Noise addition
-    noiseStd = 0.1;
-    noise = noiseStd * (randn(size(syntheticSignal)) + 1i*randn(size(syntheticSignal)));
-    syntheticSignal = syntheticSignal + noise;
-
-    time = (0:1/Fs:timeSignal*1e-3-1/Fs)';
-
     % Constant Doppler addition
-    phi = 2*pi*cumsum(fDoppler)/Fs;
-    syntheticSignal = syntheticSignal .*exp(1j*phi);
+    time = (0:1/Fs:timeSignal*1e-3-1/Fs)';
+    syntheticSignal = syntheticSignal .*exp(1j*2*pi.*fDoppler.*time);
+
+    % Noise addition
+    %noise = noiseStd * (randn(size(syntheticSignal)) + 1i*randn(size(syntheticSignal)));
+    %syntheticSignal = syntheticSignal + noise;
+    syntheticSignal = awgn(syntheticSignal, SNR);
     
     figure
     plot(time, real(syntheticSignal))
