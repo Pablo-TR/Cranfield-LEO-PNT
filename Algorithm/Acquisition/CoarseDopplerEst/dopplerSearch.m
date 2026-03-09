@@ -39,7 +39,7 @@ for n = 1:numTimeBlocks
         likelihood = max(abs(rcorr));
         
         fd_upper = fd + fd_limit;
-        r_wiped_upper= r .* exp(-1j*2*pi*fd_upper*tArray);
+        r_wiped_upper = r .* exp(-1j*2*pi*fd_upper*tArray);
         rcorr_upper= xcorr(r_wiped_upper, r_local);
         likelihood_upper= max(abs(rcorr_upper));
 
