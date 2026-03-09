@@ -25,7 +25,7 @@ selectInd = floor(Nr/2) : Nfft - ceil(Nr/2);
 
 result = zeros(length(fDoppler),length(selectInd));
 
-fftLocal = fft(conj(r_local), Nfft)';
+fftLocal = conj(fft(local, Nfft)');
 
 for i = 1:length(fDoppler)    
 

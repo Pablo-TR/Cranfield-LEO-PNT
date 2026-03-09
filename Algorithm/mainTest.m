@@ -20,7 +20,8 @@ rcorrNorm = (abs(rcorr) - min(abs(rcorr)))/(max(abs(rcorr))-min(abs(rcorr)));
 rcorrNorm = rcorrNorm(idx);
 
 [maxcorr, idxMax] = max(rcorrNorm);
-assert(timePeaks*1e3 == time(idxMax), 'Correlation peak does not match ')
+tol = 1e-8;
+assert(abs(timePeaks*1e3 - time(idxMax))<tol, 'Correlation peak does not match ')
 %%
 figure
 plot(time, rcorrNorm)
@@ -34,7 +35,7 @@ grid on;
 
 %% dopplerFrequencySearch
 
-fDoppler = -5000:1000:5000; % Doppler frequency
+fDoppler = -5000:100:5000; % Doppler frequency
 
 tStart = 0;
 tEnd     = tStart + 1; % End time [ms]
@@ -48,7 +49,7 @@ selectInd = floor(Nr/2) : Nfft - ceil(Nr/2);
 
 result = zeros(length(fDoppler),length(selectInd));
 
-fftLocal = fft(conj(local), Nfft)';
+fftLocal = conj(fft(local, Nfft)');
 
 for i = 1:length(fDoppler)    
 
