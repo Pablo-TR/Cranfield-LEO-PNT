@@ -1,28 +1,27 @@
 clc; clear all; close all;
-Fsym = 2.304e8;
-Fs = 5e8;
-Fd = 1200;
-SNR = 30; %dBW
-[synSig, timePeaks] = signalCreator(Fs, 10, Fd, SNR);
+
+Fsym = 2.304e8; Fs = 5e8; Fd = 4200; SNR = 100; %dBW
+
+timeSignal = 1;
+[synSig, timePeaks] = signalGenerator(Fs, timeSignal, Fd, SNR);
 
 local = localReplica(Fs, Fsym);
-
+localExtended = localExtendedReplica(Fs, timeSignal);
 
 % Correlation between incoming signal and synchronisation sequence
 [rcorr, lags] = xcorr(synSig, local);
 
-time = (1e3*lags)'/Fs;
+time = lags'/Fs;
 % Keep only time >= 0
 idx = time >= 0;
-
 time = time(idx);
-
 rcorrNorm = (abs(rcorr) - min(abs(rcorr)))/(max(abs(rcorr))-min(abs(rcorr)));
 rcorrNorm = rcorrNorm(idx);
-
 [maxcorr, idxMax] = max(rcorrNorm);
+
 tol = 1e-8;
-assert(abs(timePeaks*1e3 - time(idxMax))<tol, 'Correlation peak does not match ')
+assert(abs(timePeaks - (time(idxMax)*1e3-floor(time(idxMax)*1e3)))<tol, 'Correlation peak does not match ')
+
 %%
 figure
 plot(time, rcorrNorm)
@@ -38,19 +37,16 @@ grid on;
 
 fDoppler = -5000:100:5000; % Doppler frequency
 
-tStart = 0;
-tEnd     = tStart + 10; % End time [ms]
-
-synSig = synSig(:);
+localExtended = localExtended(:);
 
 Nx = numel(synSig);
-Nr = numel(local);
+Nr = numel(localExtended);
 Nfft = Nr + Nx - 1;
 selectInd = floor(Nr/2) : Nfft - ceil(Nr/2);
 
 result = zeros(length(fDoppler),length(selectInd));
 
-fftLocal = conj(fft(local, Nfft)');
+fftLocal = conj(fft(localExtended, Nfft));
 
 t = (0:length(synSig)-1)'/Fs;
 
@@ -69,7 +65,7 @@ for i = 1:length(fDoppler)
 end
 
 %%
-[T,F] = meshgrid(time,fDoppler);
+[T,F] = meshgrid(t,fDoppler);
 
 % Find maximum correlation value
 [maxVal, idx] = max(result(:));
@@ -78,7 +74,7 @@ end
 [row, col] = ind2sub(size(result), idx);
 
 % Corresponding time and frequency
-tMax = T(row, col)
+tMax = T(row, col);
 fMax = F(row, col)
 
 %%
@@ -100,6 +96,8 @@ doppler = zeros(numTimeBlocks,1);
 timeArr = zeros(numTimeBlocks,1);
 fd = 0;
 
+t = (0:length(synSig)-1)'/Fs;
+
 for n = 1:numTimeBlocks
     disp(n);
     disp(numTimeBlocks);    
@@ -111,7 +109,7 @@ for n = 1:numTimeBlocks
     fd_limit = 10000;
 
     % Wipe-off candidate Doppler
-    r_wiped = synSig     .* exp(-1j*2*pi*fd*time);
+    r_wiped = synSig .* exp(-1i*2*pi*fd*t);
     
     while fd_limit > 10
         
@@ -122,12 +120,12 @@ for n = 1:numTimeBlocks
         likelihood = max(abs(rcorr));
         
         fd_upper = fd + fd_limit;
-        r_wiped_upper= synSig .* exp(-1j*2*pi*fd_upper*time);
+        r_wiped_upper= synSig .* exp(-1i*2*pi*fd_upper*t);
         rcorr_upper= xcorr(r_wiped_upper, local);
         likelihood_upper= max(abs(rcorr_upper));
 
         fd_lower = fd - fd_limit;
-        r_wiped_lower = synSig .* exp(-1j*2*pi*fd_lower*time);
+        r_wiped_lower = synSig .* exp(-1i*2*pi*fd_lower*t);
         rcorr_lower= xcorr(r_wiped_lower, local);
         likelihood_lower= max(abs(rcorr_lower));
 
@@ -136,15 +134,15 @@ for n = 1:numTimeBlocks
             continue
         elseif likelihood_lower > likelihood
             fd = fd_lower;
-            r_wiped = synSig .* exp(-1j*2*pi*fd*time);
+            r_wiped = synSig .* exp(-1i*2*pi*fd*t);
             continue
         elseif likelihood_upper > likelihood
             fd = fd_upper;
-            r_wiped = synSig .* exp(-1j*2*pi*fd*time);
+            r_wiped = synSig .* exp(-1i*2*pi*fd*t);
         end
     end
 
-    doppler(n) = fd;
+    doppler(n) = fd
     timeArr(n) = tStart;
 
 end
@@ -154,12 +152,13 @@ end
 
 fd = -10000:50:10000; % Doppler frequency
 
+t = (0:length(synSig)-1)'/Fs;
 
 correlation = zeros(length(fd),1);
 
 for i=1:length(fd)
     disp(i)
-    r_wiped = synSig .* exp(-1j*2*pi*fd(i)*time);
+    r_wiped = synSig .* exp(-1i*2*pi*fd(i)*t);
     % Correlate with local replica
     rcorr = xcorr(r_wiped, local);
     
@@ -169,6 +168,8 @@ end
 
 
 %%
+[a,b] = max(correlation);
+fd(b)
 figure
 plot(fd, correlation)
 grid on;
