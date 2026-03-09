@@ -15,7 +15,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [syntheticSignal, tReplicaStarts] = signalCreator(Fs, timeSignal)
+function [syntheticSignal, tReplicaStarts] = signalCreator(Fs, timeSignal, fDoppler)
 
     Fsym = 2.304e8;
     tRep = 1e-3; % Repeats every 1ms
@@ -44,8 +44,12 @@ function [syntheticSignal, tReplicaStarts] = signalCreator(Fs, timeSignal)
     noiseStd = 0.1;
     noise = noiseStd * (randn(size(syntheticSignal)) + 1i*randn(size(syntheticSignal)));
     syntheticSignal = syntheticSignal + noise;
-    
-    time = 0:1/Fs:timeSignal*1e-3-1/Fs;
+
+    time = (0:1/Fs:timeSignal*1e-3-1/Fs)';
+
+    % Constant Doppler addition
+    phi = 2*pi*cumsum(fDoppler)/Fs;
+    syntheticSignal = syntheticSignal .*exp(1j*phi);
     
     figure
     plot(time, real(syntheticSignal))

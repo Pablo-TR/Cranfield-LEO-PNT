@@ -1,8 +1,9 @@
 clc; clear all; close all;
 Fsym = 2.304e8;
 Fs = 5e8;
+Fd = 1200;
 
-[synSig, timePeaks] = signalCreator(Fs, 1);
+[synSig, timePeaks] = signalCreator(Fs, 1, Fd);
 
 local = localReplica(Fs, Fsym);
 
@@ -51,7 +52,7 @@ result = zeros(length(fDoppler),length(selectInd));
 
 fftLocal = conj(fft(local, Nfft)');
 
-for i = 1:length(fDoppler)    
+for i = 1:length(fDoppler)
 
     % Wipe-off candidate Doppler
     r_wiped = synSig .* exp(-1j*2*pi*fDoppler(i)*time);
