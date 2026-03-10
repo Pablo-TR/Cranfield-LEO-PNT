@@ -32,7 +32,7 @@ tArray    = (0:nSamples-1).' / Fs; % Time vector (Nx1)
 [r, ~, ~, ~] = readSignal(signalID, tStart, tStart+tCoh);
 r = r(:);
 
-fd = -100000:500:100000; % Doppler frequency
+fd = -15000:100:15000; % Doppler frequency
 
 
 correlation = zeros(length(fd),1);

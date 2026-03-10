@@ -5,18 +5,17 @@ Fsym = 2.304e8; % Symbol frequency [Hz]
 signalData = getSignalByID(signalID);
 Fs = signalData.SamplingFreq;
 
-nSamples = round(Fs*tCoh*1e-3); % Number of samples
-tArray   = (0:nSamples-1).' / Fs; % Time vector (Nx1)
-
-
 [r_local, ~] = localReplica(Fs, Fsym);
+r_local = r_local(:);
 
-fDoppler = -50000:1000:50000; % Doppler frequency
+fDoppler = -15000:100:15000; % Doppler frequency
 
 tStart = 0;
 tEnd     = tStart + tCoh; % End time [ms]
 [r, ~, ~, ~] = readSignal(signalID, tStart, tEnd);
 r = r(:);
+
+tArray = (0:length(r)-1)'/Fs;
 
 Nx = numel(r);
 Nr = numel(r_local);
@@ -25,7 +24,7 @@ selectInd = floor(Nr/2) : Nfft - ceil(Nr/2);
 
 result = zeros(length(fDoppler),length(selectInd));
 
-fftLocal = conj(fft(local, Nfft));
+fftLocal = conj(fft(r_local, Nfft));
 
 for i = 1:length(fDoppler)    
 
@@ -41,5 +40,4 @@ for i = 1:length(fDoppler)
     result(i, :) = abs(inverse(selectInd));
 
 end
-
 

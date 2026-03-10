@@ -1,6 +1,6 @@
 clc; clear all; close all;
 
-Fsym = 2.304e8; Fs = 5e8; Fd = 4200; SNR = 100; %dBW
+Fsym = 2.304e8; Fs = 5e8; Fd = 3500; SNR = 20; %dBW
 
 timeSignal = 1;
 [synSig, timePeaks] = signalGenerator(Fs, timeSignal, Fd, SNR);
@@ -38,15 +38,16 @@ grid on;
 fDoppler = -5000:100:5000; % Doppler frequency
 
 localExtended = localExtended(:);
+local = local(:);
 
 Nx = numel(synSig);
-Nr = numel(localExtended);
+Nr = numel(local);
 Nfft = Nr + Nx - 1;
 selectInd = floor(Nr/2) : Nfft - ceil(Nr/2);
 
 result = zeros(length(fDoppler),length(selectInd));
 
-fftLocal = conj(fft(localExtended, Nfft));
+fftLocal = conj(fft(local, Nfft));
 
 t = (0:length(synSig)-1)'/Fs;
 
@@ -150,7 +151,7 @@ end
 
 %% dopplerCorrelation
 
-fd = -10000:50:10000; % Doppler frequency
+fd = -5000:100:5000; % Doppler frequency
 
 t = (0:length(synSig)-1)'/Fs;
 
