@@ -24,9 +24,9 @@ function [rawLocalReplica, localReplica] = localReplica(Fs, Fsym)
 
     M = 4;              % QPSK modulation
     k = log2(M);        % Bits per symbol
-    span = 15;          % Filter span (symbols), number of symbols covered
-    sps = 18;           % Samples per symbol
-    rollOff = 0.1;      % Obtained from paper
+    span = 10;          % Filter span (symbols), number of symbols covered
+    sps = 5;           % Samples per symbol
+    rollOff = 0.05;      % Obtained from paper
 
     % 1. Hexadecimal sequence of symbols (SS) conversion to Binary
     % qSSHex = ['B5D0 CDB5 66F9 5A93 F90B 0060 834E 073C 9EC3 EAAA D425 C677' ...
@@ -58,6 +58,6 @@ function [rawLocalReplica, localReplica] = localReplica(Fs, Fsym)
 
     % 3. SRRC Pulse Shaping Filter, maximise correlation by varying span and sps?
     txFilter = rcosdesign(rollOff, span, sps, 'sqrt'); % Tx SRRC filter, span*L_up+1 samples of the filter
-    localReplica = upfirdn(rawLocalReplica, txFilter, p_num, q_den);  % Pulse shaping
+    localReplica = upfirdn(rawLocalReplica, txFilter, 1, 1);  % Pulse shaping
     
 end
