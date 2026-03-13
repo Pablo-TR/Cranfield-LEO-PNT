@@ -1,14 +1,33 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
+%                            dopplerSearch.m
+%
+% Copyright: Cranfield University
+% Project Name: LEO-PNT
+% Module: Algorithm
+% Author: Alfredo
+% Date: 8th March 2026
+% Last Update: 8th March 2026
+% Version: 1.0.0
+%
+% Description: Time-domain Doppler estimation via Doppler wipe-off and correlation.
+% A grid of candidate Doppler frequencies is applied to the received
+% signal to wipe off the carrier offset. Each wiped signal is
+% cross-correlated with a local replica, and the maximum correlation
+% peak determines the Doppler estimate.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [doppler, timeArr] = dopplerSearch(signalID, tInterval, tCoh)
 
 signalData = getSignalByID(signalID);
 Fs = signalData.SamplingFreq;
+Fsym = signalData.SymbolFreq; % Symbol frequency [Hz]
 
 nSamples = round(Fs*tCoh*1e-3); % Number of samples
 tArray    = (0:nSamples-1).' / Fs; % Time vector (Nx1)
 
-Fsym = 2.304e8;        % Carrier frequency [Hz] (passed to replica)
-[r_local, ~] = localReplica(Fs, Fsym);
+[~, r_local] = localReplica(Fs, Fsym);
 
 numTimeBlocks = (tInterval(2)-tInterval(1))/tCoh;
 
