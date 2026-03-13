@@ -20,7 +20,7 @@
 
 function [doppler, timeArr] = dopplerSearch(signalID, tInterval, tCoh)
 
-signalData = getSignalByID(signalID);
+signalData = getSignalDataByID(signalID);
 Fs = signalData.SamplingFreq;
 Fsym = signalData.SymbolFreq; % Symbol frequency [Hz]
 

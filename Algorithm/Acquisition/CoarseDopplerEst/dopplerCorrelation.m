@@ -20,7 +20,7 @@
 
 function [fd, correlation] = dopplerCorrelation(signalID, tStart, tCoh)
 
-    signalData = getSignalByID(signalID);
+    signalData = getSignalDataByID(signalID);
     Fs = signalData.SamplingFreq;
     Fsym = signalData.SymbolFreq; % Symbol frequency [Hz]
     
