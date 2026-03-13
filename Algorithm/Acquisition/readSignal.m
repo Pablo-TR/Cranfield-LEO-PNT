@@ -22,7 +22,7 @@
 function [signalDetrended, N, timeArray, binData] = readSignal(signalID, tStart, tEnd)
     
     % Extracting information from the ID signal for later reading
-    signalData = getSignalByID(signalID);
+    signalData = getSignalDataByID(signalID);
     filename = signalData.Filename;
     Fs = signalData.SamplingFreq;
 

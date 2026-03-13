@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%                            getSignalByID.m
+%                            getSignalDataByID.m
 %
 % Copyright: Cranfield University
 % Project Name: LEO-PNT
@@ -19,7 +19,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-function signalData = getSignalByID(signalID)
+function signalData = getSignalDataByID(signalID)
 %GETROWBYID Read an XLSX file, find a row by ID, and return that row's data.
 %
 % rowData = GETROWBYID(xlsxFile, signalID)
