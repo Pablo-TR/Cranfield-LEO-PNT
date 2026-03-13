@@ -18,22 +18,23 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [fd, correlation] = dopplerCorrelation(signalID, tStart, tCoh)
+function [fd, correlation] = dopplerCorrelation(r, signalData, tCoh)
 
-    signalData = getSignalDataByID(signalID);
     Fs = signalData.SamplingFreq;
     Fsym = signalData.SymbolFreq; % Symbol frequency [Hz]
     
     nSamples = round(Fs*tCoh*1e-3); % Number of samples
     tArray    = (0:nSamples-1).' / Fs; % Time vector (Nx1)
     
-    [~, r_local] = localReplica(Fs, Fsym);
-    %r_local = localExtendedReplica(Fs, tCoh);
-    
-    [r, ~, ~, ~] = readSignal(signalID, tStart, tStart+tCoh);
+    if tCoh <= 1
+        [~, r_local] = localReplica(Fs, Fsym);
+    else
+        r_local = localExtendedReplica(Fs, tCoh);
+    end
+
     r = r(:);
     
-    fd = -15000:1000:15000; % Doppler frequency
+    fd = -50000:1000:50000; % Doppler frequency
     
     
     correlation = zeros(length(fd),1);

@@ -22,7 +22,7 @@ tStart = 0;
 tEnd = 10;
 
 signalID = 2;
-signalData = getSignalByID(signalID);
+signalData = getSignalDataByID(signalID);
 Fs = signalData.SamplingFreq;
 Fsym = 2.304e8;
 
