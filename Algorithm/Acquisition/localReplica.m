@@ -16,7 +16,7 @@
 % and demodulation of the OneWeb Ku-band downlink [Preprint]. 
 % The University of Texas at Austin. 
 % https://radionavlab.ae.utexas.edu/wp-content/uploads/komodromos_oneweb_parameter_estimation.pdf
-
+%
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -59,5 +59,6 @@ function [rawLocalReplica, localReplica] = localReplica(Fs, Fsym)
     % 3. SRRC Pulse Shaping Filter, maximise correlation by varying span and sps?
     txFilter = rcosdesign(rollOff, span, sps, 'sqrt'); % Tx SRRC filter, span*L_up+1 samples of the filter
     localReplica = upfirdn(rawLocalReplica, txFilter, 1, 1);  % Pulse shaping
+    
     
 end

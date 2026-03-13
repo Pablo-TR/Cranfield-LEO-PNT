@@ -4,7 +4,7 @@ function localExtended = localExtendedReplica(Fs, timeSignal)
     Fsym = 2.304e8;
     tRep = 1e-3; % Repeats every 1ms
     
-    [r_local, ~] = localReplica(Fs, Fsym);
+    [~, r_local] = localReplica(Fs, Fsym);
     
     r_local = r_local(:);     % ensure column
     L = length(r_local);              % replica length

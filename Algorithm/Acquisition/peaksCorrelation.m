@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%                            ${fileName}.m
+%                            peaksCorrelation.m
 %
 % Copyright: Cranfield University
 % Project Name: LEO-PNT
@@ -19,16 +19,16 @@ clear all; clc; close all;
 
 %%
 tStart = 0;
-tEnd = 1;
+tEnd = 10;
 
-signalID = 0;
+signalID = 2;
 signalData = getSignalByID(signalID);
 Fs = signalData.SamplingFreq;
 Fsym = 2.304e8;
 
 [signalDetrended, ~, timeArray, binData] = readSignal(signalID, tStart, tEnd);
 
-local = localReplica(Fs, Fsym);
+[~, local] = localReplica(Fs, Fsym);
 
 
 % Correlation between incoming signal and synchronisation sequence
@@ -45,3 +45,5 @@ xlim([tStart time(end)])
 set(gca, 'FontSize', 16);
 set(gca, 'LineWidth', 1.2);
 grid on;
+
+
