@@ -23,28 +23,31 @@ function [fd, correlation] = dopplerCorrelation(r, signalData, tCoh)
     Fs = signalData.SamplingFreq;
     Fsym = signalData.SymbolFreq; % Symbol frequency [Hz]
     
-    nSamples = round(Fs*tCoh*1e-3); % Number of samples
-    tArray    = (0:nSamples-1).' / Fs; % Time vector (Nx1)
+    tArray = (0:length(r)-1).'/Fs; % Time vector (Nx1)
     
     if tCoh <= 1
         [~, r_local] = localReplica(Fs, Fsym);
     else
         r_local = localExtendedReplica(Fs, tCoh);
     end
+    
 
     r = r(:);
+    r_local = r_local(:);
     
-    fd = -50000:1000:50000; % Doppler frequency
+    fd = (-1000:100:1000)'; % Doppler frequency
     
     
     correlation = zeros(length(fd),1);
+    argmax_idx = zeros(length(fd),1);
     
     for i=1:length(fd)
-        disp(i)
+        disp(fd(i))
         r_wiped = r .* exp(-1j*2*pi*fd(i)*tArray);
         % Correlate with local replica
         rcorr = xcorr(r_wiped, r_local);
+        %rcorr = conv(r_wiped, conj(flipud(r_local)), "valid");
         
         % Detection metric: peak magnitude
-        correlation(i) = max(abs(rcorr));
+        [correlation(i), argmax_idx(i)] = max(abs(rcorr));
     end

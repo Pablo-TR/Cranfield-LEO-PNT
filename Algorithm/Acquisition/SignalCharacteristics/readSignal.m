@@ -37,8 +37,8 @@ function [signalDetrended, N, timeArray, binData] = readSignal(signalID, tStart,
     Nskip = floor(tStart * Fs / 1000); % Nskip: number of I/Q sample pairs to skip from the beginning
     tDur = tEnd - tStart;
 
-    N = floor(tDur * Fs / 1000); % Total number of I/Q samples to read
-    timeArray = tStart/1000:1/Fs:tEnd/1000 - 1/Fs; % Time array
+    N = floor(tDur * Fs / 1000)+1; % Total number of I/Q samples to read
+    timeArray = tStart/1000:1/Fs:tEnd/1000; % Time array
 
     % File Read Parameters
     dataType = 'int16';
@@ -68,7 +68,7 @@ function [signalDetrended, N, timeArray, binData] = readSignal(signalID, tStart,
     
     % Conversion int16 to hexadecimal
     dataVec = data(:);
-    binData= dec2bin(typecast(int16(dataVec), 'uint16'), 4);
+    binData = dec2bin(typecast(int16(dataVec), 'uint16'), 4);
     
     % Checking if fewer samples than expected were read and adjusting 
     if size(data, 2) < N
@@ -81,7 +81,7 @@ function [signalDetrended, N, timeArray, binData] = readSignal(signalID, tStart,
     dataI = double(data(1, :)) / (2^15 - 1); % Normalising to 2^15 = 32768 (max int16)
     dataQ = double(data(2, :)) / (2^15 - 1);
     signal = dataI + 1i * dataQ;
-    signalDetrended = detrend(signal); % Removes DC drift
+    signalDetrended = signal - mean(signal); % Removes DC drift
     fprintf('Signal processed (detrend).\n');
 
 end

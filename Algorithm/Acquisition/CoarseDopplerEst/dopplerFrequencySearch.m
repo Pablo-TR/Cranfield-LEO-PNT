@@ -32,7 +32,7 @@ function [result, tArray, fDoppler] = dopplerFrequencySearch(r, signalData, tCoh
     
     r_local = r_local(:);
     
-    fDoppler = -50000:1000:50000; % Doppler frequency
+    fDoppler = -1000:50:1000; % Doppler frequency
     
     tArray = (0:length(r)-1)'/Fs;
     
