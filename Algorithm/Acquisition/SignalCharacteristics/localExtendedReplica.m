@@ -22,7 +22,5 @@ function localExtended = localExtendedReplica(Fs, timeSignal)
 
     time = (0:1/Fs:timeSignal*1e-3-1/Fs)';
 
-    
 
-    figure
-    plot(time, real(localExtended))
+    
