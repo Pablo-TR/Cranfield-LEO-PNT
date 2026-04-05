@@ -20,7 +20,13 @@ function localExtended = localExtendedReplica(Fs, timeSignal)
     % Repeat signal for however much time specified (timeSignal)
     localExtended = repmat(sig1ms, timeSignal, 1);
 
+    localExtended(end-(samplesPerMs-L)+1:end) = [];
+
     time = (0:1/Fs:timeSignal*1e-3-1/Fs)';
+    time(end-(samplesPerMs-L)+1:end) = [];
+
+    % figure
+    % plot(time, localExtended)
 
 
     

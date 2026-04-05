@@ -15,7 +15,8 @@
 % drift, hence zero mean) along with the number of I/Q samples (N) and the
 % time array. It takes as arguments the filename of the .bin signal along
 % with the sampling frequency Fs [Hz] and tStart and tEnd which define the 
-% interval of the time of signal to read [ms].
+% interval of the time of signal to read [ms]. From [x y) ms, not including
+% last one.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -37,8 +38,8 @@ function [signalDetrended, N, timeArray, binData] = readSignal(signalID, tStart,
     Nskip = floor(tStart * Fs / 1000); % Nskip: number of I/Q sample pairs to skip from the beginning
     tDur = tEnd - tStart;
 
-    N = floor(tDur * Fs / 1000)+1; % Total number of I/Q samples to read
-    timeArray = tStart/1000:1/Fs:tEnd/1000; % Time array
+    N = floor(tDur * Fs / 1000); % Total number of I/Q samples to read
+    timeArray = tStart/1000:1/Fs:tEnd/1000-1/Fs; % Time array
 
     % File Read Parameters
     dataType = 'int16';
@@ -83,6 +84,16 @@ function [signalDetrended, N, timeArray, binData] = readSignal(signalID, tStart,
     signal = dataI + 1i * dataQ;
     signalDetrended = signal - mean(signal); % Removes DC drift
     fprintf('Signal processed (detrend).\n');
+
+    % figure
+    % plot(dataI)
+    % hold on
+    % plot(dataQ)
+    % xlim([0 100])
+    % xlabel('Samples')
+    % ylabel('Amplitude')
+    % title('I-Q Data')
+    % legend('I', 'Q')
 
 end
 

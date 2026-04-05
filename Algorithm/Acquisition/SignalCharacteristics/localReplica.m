@@ -52,13 +52,49 @@ function [rawLocalReplica, localReplica] = localReplica(Fs, Fsym)
     % 2. QPSK Modulation (bi2de is binary to decimal conv)
     dataSym = fliplr(bi2de(reshape(qSSBin, k, []).', 'left-msb').');   % a_m symbol phase value 0, 1, 2 or 3 (left-msb treats left bit as highest) and flips entire sequence
     rawLocalReplica = exp(1i.*dataSym*pi/2); % QPSK, converts integer symbol values into complex points in the in-phase quadrature diagram
-    
-    [p_num, q_den] = rat(Fs/Fsym);
-    rawLocalReplica = resample(rawLocalReplica, p_num, q_den);
-
+    % figure
+    % plot(real(rawLocalReplica))
+    % xlabel('Sample Index')
+    % ylabel('Amplitude')
     % 3. SRRC Pulse Shaping Filter, maximise correlation by varying span and sps?
     txFilter = rcosdesign(rollOff, span, sps, 'sqrt'); % Tx SRRC filter, span*L_up+1 samples of the filter
-    localReplica = upfirdn(rawLocalReplica, txFilter, 1, 1);  % Pulse shaping
+    localReplica = upfirdn(rawLocalReplica, txFilter, sps, 1);  % Pulse shaping. Alternative: change sps for 1
+    % figure
+    % plot(real(localReplica))
+    % xlabel('Sample Index')
+    % ylabel('Amplitude')
+
+    [p_num, q_den] = rat(Fs/Fsym);
+    localReplica = resample(localReplica, p_num, q_den);
+    gd = span*sps/2;
+
+    localReplica = localReplica(gd+1 : sps : end-gd); % Alternative: comment this line
+    % figure
+    % plot(real(localReplica))
+    % xlabel('Sample Index')
+    % ylabel('Amplitude')
+
+    % localReplica = resample(localReplica(floor(0.5*(span*sps))+1:end-ceil(0.5*(span*sps))), p_num, q_den);
+    
+    % figure
+    % plot(real(rawLocalReplica), imag(rawLocalReplica), ...
+    %  'x', 'MarkerSize', 20, 'LineWidth', 5)
+    % ylim([-1.5 1.5])
+    % xlim([-1.5 1.5])
+    % ylabel('Imaginary')
+    % xlabel('Real')
+    % title('Complex plane')
+    % grid on
+    %Shape of localReplica
+    % figure
+    % plot(real(localReplica))
+    
+    % Y = fft(localReplica);
+    % L = length(localReplica);
+    % plot((Fs/L*(-L/2:L/2-1))/1e6,abs(fftshift(Y)),"LineWidth",3)
+    % title("Complex Magnitude of fft Spectrum")
+    % xlabel("f (MHz)")
+    % ylabel("|fft(X)|")
     
     
 end

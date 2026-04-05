@@ -28,10 +28,10 @@ Fsym = signalData.SymbolFreq;
 
 M = 4;              % QPSK modulation
 k = log2(M);        % Bits per symbol
-span = 2:1:100;          % Filter span (symbols), number of symbols covered
-sps = 2:1:100;           % Samples per symbol
+span = 1:1:40;          % Filter span (symbols), number of symbols covered
+sps = 1:1:40;           % Samples per symbol
 maxCorr = zeros(length(span), length(sps));
-rollOff = 0.05:0.05:0.5;
+rollOff = 0.05:0.05:0.1;
 
 % 1. Hexadecimal sequence of symbols (SS) conversion to Binary
 qSSHex = ['B5D0 CDB5 66F9 5A93 F90B 0060 834E 073C 9EC3 EAAA D425 C677' ...
@@ -56,9 +56,6 @@ qSSBin = char(qSSBin) - '0';
 % 2. QPSK Modulation (bi2de is binary to decimal conv)
 dataSym = fliplr(bi2de(reshape(qSSBin, k, []).', 'left-msb').');   % a_m symbol phase value 0, 1, 2 or 3 (left-msb treats left bit as highest) and flips entire sequence
 rawLocalReplica = exp(1i.*dataSym*pi/2);  % QPSK, converts integer symbol values into complex points in the in-phase quadrature diagram
-    
-[p_num, q_den] = rat(Fs/Fsym);
-rawLocalReplica = resample(rawLocalReplica, p_num, q_den);
 
 % 3. SRRC Pulse Shaping Filter, maximise correlation by varying span and sps?
 
@@ -77,7 +74,13 @@ for r = 1:length(rollOff)
             end
 
             txFilter = rcosdesign(rollOff(r), span(i), sps(j), 'sqrt');
-            localReplica = upfirdn(rawLocalReplica, txFilter, 1, 1);
+            localReplica = upfirdn(rawLocalReplica, txFilter, sps(j), 1);
+
+            [p_num, q_den] = rat(Fs/Fsym);
+            localReplica = resample(localReplica, p_num, q_den);
+            gd = span(i)*sps(j)/2;
+
+            localReplica = localReplica(gd+1 : sps(j) : end-gd);
 
             % Correlation between incoming signal and synchronisation sequence
             [rcorr, lags] = xcorr(signalDetrended, localReplica);
