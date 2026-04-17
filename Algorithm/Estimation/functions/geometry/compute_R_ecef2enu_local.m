@@ -1,0 +1,6 @@
+function R = compute_R_ecef2enu_local(lat, lon)
+sl = sin(lat); cl = cos(lat); sn = sin(lon); cn = cos(lon);
+R = [-sn,      cn,       0; ...
+     -sl*cn,  -sl*sn,    cl; ...
+      cl*cn,   cl*sn,    sl];
+end
