@@ -25,6 +25,7 @@ classdef testdopplerFrequencySearch < matlab.unittest.TestCase
             Fs = 5e8;
             Fsym = 2.304e8;
             fDoppler = 3200;
+            fDrange = 1600:200:4600;
 
             r = signalGenerator(Fs, timeSignal, fDoppler, SNR);
 
@@ -33,14 +34,23 @@ classdef testdopplerFrequencySearch < matlab.unittest.TestCase
                 'SymbolFreq', Fsym );
 
             % Run function
-            [result, tArray, fD] = dopplerFrequencySearch(r, signalData, tCoh);
+            [result, tArray] = dopplerFrequencySearch(r, signalData, tCoh, fDrange);
 
-            [~, F] = meshgrid(tArray, fD);
+            [T, F] = meshgrid(tArray, fDrange);
 
             % Find maximum correlation
             [~, idx] = max(result(:));
             [row, col] = ind2sub(size(result), idx);
             fMax = F(row, col)
+
+            surf(T, F, result, 'EdgeColor','none');
+            xlabel('Time'); ylabel('Frequency'); zlabel('Correlation');
+            view(3); colorbar; shading interp;
+
+            figure
+            plot(fDrange, result(:,col))
+            xlabel('Frequency')
+            ylabel('Correllation')
 
             % Verification with message
             testCase.verifyEqual( ...

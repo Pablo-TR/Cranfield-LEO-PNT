@@ -21,15 +21,31 @@ function [syntheticSignal, tReplicaStarts, time] = signalGenerator(Fs, timeSigna
     Fsym = 2.304e8;
     tRep = 1e-3; % Repeats every 1ms
     
+    % r_local = localReplicaForGen(Fs, Fsym, SNR);
     [~, r_local] = localReplica(Fs, Fsym);
-    
+
     r_local = r_local(:);     % ensure column
     L = length(r_local);              % replica length
     
+
+    % timeLocal = (0:1/Fs:L/Fs-1/Fs)';
+    % new_local = r_local .*exp(1j*2*pi.*fDoppler.*timeLocal);
+
+
+
+    
+
+    %
+
     samplesPerMs = round(Fs * tRep);          % 1 ms signal length
     
     % Create zero signal
     sig1ms = complex(zeros(samplesPerMs,1));
+
+
+    % sig1ms = awgn(sig1ms, SNR);
+
+
     
     startSample = randi([1, samplesPerMs - L + 1]); % Random start position where replica fits
     
@@ -46,9 +62,7 @@ function [syntheticSignal, tReplicaStarts, time] = signalGenerator(Fs, timeSigna
     syntheticSignal = syntheticSignal .*exp(1j*2*pi.*fDoppler.*time);
 
     % Noise addition
-    %noise = noiseStd * (randn(size(syntheticSignal)) + 1i*randn(size(syntheticSignal)));
-    %syntheticSignal = syntheticSignal + noise;
     syntheticSignal = awgn(syntheticSignal, SNR);
     
-    figure
-    plot(time, real(syntheticSignal))
+    %figure
+    %plot(time, real(syntheticSignal))

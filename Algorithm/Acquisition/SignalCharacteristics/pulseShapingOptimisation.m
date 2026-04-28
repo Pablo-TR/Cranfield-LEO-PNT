@@ -24,6 +24,7 @@ signalID = 0;
 signalData = getSignalDataByID(signalID);
 Fs = signalData.SamplingFreq;
 Fsym = signalData.SymbolFreq;
+[p_num, q_den] = rat(Fs/Fsym);
 [signalDetrended, ~, timeArray, binData] = readSignal(signalID, tStart, tEnd);
 
 M = 4;              % QPSK modulation
@@ -31,7 +32,7 @@ k = log2(M);        % Bits per symbol
 span = 1:1:40;          % Filter span (symbols), number of symbols covered
 sps = 1:1:40;           % Samples per symbol
 maxCorr = zeros(length(span), length(sps));
-rollOff = 0.05:0.05:0.1;
+rollOff = 0.1;
 
 % 1. Hexadecimal sequence of symbols (SS) conversion to Binary
 qSSHex = ['B5D0 CDB5 66F9 5A93 F90B 0060 834E 073C 9EC3 EAAA D425 C677' ...
@@ -76,16 +77,32 @@ for r = 1:length(rollOff)
             txFilter = rcosdesign(rollOff(r), span(i), sps(j), 'sqrt');
             localReplica = upfirdn(rawLocalReplica, txFilter, sps(j), 1);
 
-            [p_num, q_den] = rat(Fs/Fsym);
+            
             localReplica = resample(localReplica, p_num, q_den);
-            gd = span(i)*sps(j)/2;
 
-            localReplica = localReplica(gd+1 : sps(j) : end-gd);
+            localReplica = localReplica(span(i)*sps(j)+1 : sps(j) : end-span(i)*sps(j));
 
             % Correlation between incoming signal and synchronisation sequence
             [rcorr, lags] = xcorr(signalDetrended, localReplica);
+            time = tStart + (1000*lags/Fs);
 
-            maxCorr(i, j, r) = max(abs(rcorr));
+
+            peakVal = max(abs(rcorr));
+
+            % Exclude region around the peak to estimate noise
+            [~, peakIdx] = max(abs(rcorr));
+            guard = round(0.001 * Fs); % e.g. 1 ms guard (adjust if needed)
+            
+            noiseIdx = true(size(rcorr));
+            noiseIdx(max(1,peakIdx-guard):min(length(rcorr),peakIdx+guard)) = false;
+            
+            % Noise RMS (recommended): Interference floor
+            noiseRMS = sqrt(mean(abs(rcorr(noiseIdx)).^2));
+            
+            % SNR in dB (amplitude ratio)
+            SNR_dB = 20 * log10(peakVal / noiseRMS);
+
+            maxCorr(i, j, r) = SNR_dB;
         end
     end
 end
@@ -105,7 +122,16 @@ bestSps = sps(jBest);
 bestRollOff = rollOff(rBest);
 
 disp('Best parameters found:')
-disp(['Max correlation = ', num2str(bestCorr)])
+disp(['Max PSR = ', num2str(bestCorr)])
 disp(['Best span       = ', num2str(bestSpan)])
 disp(['Best sps        = ', num2str(bestSps)])
 disp(['Best rollOff    = ', num2str(bestRollOff)])
+
+
+%%
+figure
+[SPANSPAN,SPSSPS] = meshgrid(span,sps);
+
+surf(SPANSPAN, SPSSPS, maxCorr(:,:,3), 'EdgeColor','none');
+xlabel('Span'); ylabel('Sps'); zlabel('Correlation');
+view(3); colorbar; shading interp;

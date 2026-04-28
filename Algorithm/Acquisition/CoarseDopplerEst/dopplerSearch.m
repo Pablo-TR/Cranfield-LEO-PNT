@@ -18,57 +18,65 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [doppler, timeArr] = dopplerSearch(signalID, tInterval, tCoh)
+function [doppler, timeArr] = dopplerSearch(r, signalData, tInterval, tCoh, fd, fdRange)
 
-signalData = getSignalDataByID(signalID);
+r = r(:);
+
 Fs = signalData.SamplingFreq;
 Fsym = signalData.SymbolFreq; % Symbol frequency [Hz]
 
 nSamples = round(Fs*tCoh*1e-3); % Number of samples
 tArray    = (0:nSamples-1).' / Fs; % Time vector (Nx1)
 
-[~, r_local] = localReplica(Fs, Fsym);
+tStart = tInterval(1);
+
+if tCoh <= 1
+        [~, r_local] = localReplica(Fs, Fsym);
+    else
+        r_local = localExtendedReplica(Fs, tCoh);
+end
 
 numTimeBlocks = (tInterval(2)-tInterval(1))/tCoh;
 
 doppler = zeros(numTimeBlocks,1);
 timeArr = zeros(numTimeBlocks,1);
-fd = 0;
 
 for n = 1:numTimeBlocks
     disp(n);
     disp(numTimeBlocks);    
 
-    tStart = (n-1)*tCoh;
-    tEnd     = tStart + tCoh; % End time [ms]
-    [r, ~, ~, ~] = readSignal(signalID, tStart, tEnd);
-    
-    r = r(:);
-    fd_limit = 10000;
+    Nx = numel(r);
+    Nr = numel(r_local);
+    Nfft = Nr + Nx - 1;
+    selectInd = floor(Nr/2) : Nfft - ceil(Nr/2);
+
+    fftLocal = conj(fft(r_local, Nfft));
 
     % Wipe-off candidate Doppler
     r_wiped = r .* exp(-1j*2*pi*fd*tArray);
     
-    while fd_limit > 100
+    while fdRange > 0.1
+        disp(fdRange)
         
         % Correlate with local replica
-        rcorr = xcorr(r_wiped, r_local);
-    
-        % Detection metric: peak magnitude
-        likelihood = max(abs(rcorr));
+        fftWiped = fft(r_wiped, Nfft);
+        inverse = ifft(fftWiped.*fftLocal, Nfft);
+        likelihood = max(abs(inverse(selectInd)));
         
-        fd_upper = fd + fd_limit;
+        fd_upper = fd + fdRange;
         r_wiped_upper = r .* exp(-1j*2*pi*fd_upper*tArray);
-        rcorr_upper= xcorr(r_wiped_upper, r_local);
-        likelihood_upper= max(abs(rcorr_upper));
+        fftWiped_upper = fft(r_wiped_upper, Nfft);    
+        inverse_upper = ifft(fftWiped_upper.*fftLocal, Nfft);
+        likelihood_upper = max(abs(inverse_upper(selectInd)));
 
-        fd_lower = fd - fd_limit;
+        fd_lower = fd - fdRange;
         r_wiped_lower= r .* exp(-1j*2*pi*fd_lower*tArray);
-        rcorr_lower= xcorr(r_wiped_lower, r_local);
-        likelihood_lower= max(abs(rcorr_lower));
+        fftWiped_lower = fft(r_wiped_lower, Nfft);    
+        inverse_lower = ifft(fftWiped_lower.*fftLocal, Nfft);
+        likelihood_lower = max(abs(inverse_lower(selectInd)));
 
         if likelihood_lower < likelihood && likelihood_upper < likelihood
-            fd_limit = fd_limit/2;
+            fdRange = fdRange/2;
             continue
         elseif likelihood_lower > likelihood
             fd = fd_lower;

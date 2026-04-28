@@ -26,7 +26,9 @@ function [rawLocalReplica, localReplica] = localReplica(Fs, Fsym)
     k = log2(M);        % Bits per symbol
     span = 10;          % Filter span (symbols), number of symbols covered
     sps = 5;           % Samples per symbol
-    rollOff = 0.05;      % Obtained from paper
+    rollOff = 0.1;      % Obtained from paper
+
+    [p_num, q_den] = rat(Fs/Fsym);
 
     % 1. Hexadecimal sequence of symbols (SS) conversion to Binary
     qSSHex = ['B5D0 CDB5 66F9 5A93 F90B 0060 834E 073C 9EC3 EAAA D425 C677' ...
@@ -52,49 +54,38 @@ function [rawLocalReplica, localReplica] = localReplica(Fs, Fsym)
     % 2. QPSK Modulation (bi2de is binary to decimal conv)
     dataSym = fliplr(bi2de(reshape(qSSBin, k, []).', 'left-msb').');   % a_m symbol phase value 0, 1, 2 or 3 (left-msb treats left bit as highest) and flips entire sequence
     rawLocalReplica = exp(1i.*dataSym*pi/2); % QPSK, converts integer symbol values into complex points in the in-phase quadrature diagram
+    
+    
+    
+    % localReplica = resample(rawLocalReplica, p_num, q_den);
     % figure
     % plot(real(rawLocalReplica))
     % xlabel('Sample Index')
     % ylabel('Amplitude')
+
+
     % 3. SRRC Pulse Shaping Filter, maximise correlation by varying span and sps?
     txFilter = rcosdesign(rollOff, span, sps, 'sqrt'); % Tx SRRC filter, span*L_up+1 samples of the filter
-    localReplica = upfirdn(rawLocalReplica, txFilter, sps, 1);  % Pulse shaping. Alternative: change sps for 1
-    % figure
-    % plot(real(localReplica))
-    % xlabel('Sample Index')
-    % ylabel('Amplitude')
+    localReplica = upfirdn(rawLocalReplica, txFilter, sps, 1);  % Pulse shaping
 
-    [p_num, q_den] = rat(Fs/Fsym);
+    figure
+    plot(txFilter, 'k', 'LineWidth', 1.5);
+    title('SRRC Filter Impulse Response');
+    xlabel('Samples'); ylabel('Amplitude'); grid on;
+    
+    
+    % figure
+    % plot(real(rawLocalReplica))
+
     localReplica = resample(localReplica, p_num, q_den);
-    gd = span*sps/2;
 
-    localReplica = localReplica(gd+1 : sps : end-gd); % Alternative: comment this line
+    localReplica = localReplica(span*sps+1 : sps : end-span*sps);
+
+    rawLocalReplica = resample(rawLocalReplica, p_num, q_den);
     % figure
     % plot(real(localReplica))
-    % xlabel('Sample Index')
-    % ylabel('Amplitude')
 
-    % localReplica = resample(localReplica(floor(0.5*(span*sps))+1:end-ceil(0.5*(span*sps))), p_num, q_den);
-    
-    % figure
-    % plot(real(rawLocalReplica), imag(rawLocalReplica), ...
-    %  'x', 'MarkerSize', 20, 'LineWidth', 5)
-    % ylim([-1.5 1.5])
-    % xlim([-1.5 1.5])
-    % ylabel('Imaginary')
-    % xlabel('Real')
-    % title('Complex plane')
-    % grid on
-    %Shape of localReplica
-    % figure
-    % plot(real(localReplica))
-    
-    % Y = fft(localReplica);
-    % L = length(localReplica);
-    % plot((Fs/L*(-L/2:L/2-1))/1e6,abs(fftshift(Y)),"LineWidth",3)
-    % title("Complex Magnitude of fft Spectrum")
-    % xlabel("f (MHz)")
-    % ylabel("|fft(X)|")
+    % localReplica = resample(localReplica(floor(0.5*(span*sps))+1:end-ceil(0.5*(span*sps))),p_num, q_den);
     
     
 end

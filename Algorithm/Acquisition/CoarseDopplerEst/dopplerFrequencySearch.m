@@ -15,13 +15,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-function [result, tArray, fDoppler] = dopplerFrequencySearch(r, signalData, tCoh)
+function [result, tArray] = dopplerFrequencySearch(r, signalData, tCoh, fDoppler)
     
     Fs = signalData.SamplingFreq;
     Fsym = signalData.SymbolFreq;
 
-    tStart = 0;
-    tEnd = tStart + tCoh;
     r = r(:);
 
     if tCoh <= 1
@@ -32,14 +30,12 @@ function [result, tArray, fDoppler] = dopplerFrequencySearch(r, signalData, tCoh
     
     r_local = r_local(:);
     
-    fDoppler = -1000:50:1000; % Doppler frequency
-    
     tArray = (0:length(r)-1)'/Fs;
     
     Nx = numel(r);
     Nr = numel(r_local);
     Nfft = Nr + Nx - 1;
-    selectInd = floor(Nr/2) : Nfft - ceil(Nr/2);
+    selectInd = Nr : Nfft;
     
     result = zeros(length(fDoppler), length(selectInd));
     
@@ -54,8 +50,10 @@ function [result, tArray, fDoppler] = dopplerFrequencySearch(r, signalData, tCoh
     
         % Compute the FFT of the wiped signal
         fftWiped = fft(r_wiped, Nfft);
-    
+
         inverse = ifft(fftWiped.*fftLocal, Nfft);
+
+        % rcorr = xcorr(r_wiped, r_local);
     
         % Store the result of the inverse FFT
         result(i, :) = abs(inverse(selectInd));
